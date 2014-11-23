@@ -7,11 +7,12 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/facebookgo/httpcontrol"
 )
 
 // Api is the interface for interacting with Firebase.
@@ -285,21 +286,12 @@ func (f *f) Call(method, path, auth string, body []byte, params map[string]strin
 	return ret, nil
 }
 
-func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
-	return func(netw, addr string) (net.Conn, error) {
-		conn, err := net.DialTimeout(netw, addr, cTimeout)
-		if err != nil {
-			return nil, err
-		}
-		conn.SetDeadline(time.Now().Add(rwTimeout))
-		return conn, nil
-	}
-}
-
 func newTimeoutClient(connectTimeout time.Duration, readWriteTimeout time.Duration) *http.Client {
 	return &http.Client{
-		Transport: &http.Transport{
-			Dial: TimeoutDialer(connectTimeout, readWriteTimeout),
+		Transport: &httpcontrol.Transport{
+			RequestTimeout: readWriteTimeout,
+			DialTimeout:    connectTimeout,
+			MaxTries:       3,
 		},
 	}
 }
