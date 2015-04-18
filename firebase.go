@@ -186,6 +186,8 @@ type Client interface {
 	EqualTo(value string) Client
 	StartAt(value string) Client
 	EndAt(value string) Client
+	LimitToFirst(value int) Client
+	LimitToLast(value int) Client
 
 	// Creates a new value under this reference.
 	// Returns a reference to the newly created value.
@@ -331,7 +333,7 @@ const (
 )
 
 // These are some shenanigans, golang. Shenanigans I say.
-func (c *client) newParamMap(key, value string) map[string]string {
+func (c *client) newParamMap(key string, value interface{}) map[string]string {
 	ret := make(map[string]string, len(c.params)+1)
 	for key, value := range c.params {
 		ret[key] = value
@@ -341,7 +343,7 @@ func (c *client) newParamMap(key, value string) map[string]string {
 	return ret
 }
 
-func (c *client) clientWithNewParam(key, value string) *client {
+func (c *client) clientWithNewParam(key string, value interface{}) *client {
 	return &client{
 		api:    c.api,
 		auth:   c.auth,
@@ -368,6 +370,14 @@ func (c *client) StartAt(value string) Client {
 
 func (c *client) EndAt(value string) Client {
 	return c.clientWithNewParam("endAt", value)
+}
+
+func (c *client) LimitToFirst(value int) Client {
+	return c.clientWithNewParam("limitToFirst", value)
+}
+
+func (c *client) LimitToLast(value int) Client {
+	return c.clientWithNewParam("limitToLast", value)
 }
 
 func (c *client) Push(value interface{}, params map[string]string) (Client, error) {

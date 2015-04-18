@@ -161,6 +161,26 @@ func (_mr *_MockClientRecorder) EndAt(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "EndAt", arg0)
 }
 
+func (_m *MockClient) LimitToFirst(value int) Client {
+	ret := _m.ctrl.Call(_m, "LimitToFirst", value)
+	ret0, _ := ret[0].(Client)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) LimitToFirst(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "LimitToFirst", arg0)
+}
+
+func (_m *MockClient) LimitToLast(value int) Client {
+	ret := _m.ctrl.Call(_m, "LimitToLast", value)
+	ret0, _ := ret[0].(Client)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) LimitToLast(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "LimitToLast", arg0)
+}
+
 func (_m *MockClient) Push(value interface{}, params map[string]string) (Client, error) {
 	ret := _m.ctrl.Call(_m, "Push", value, params)
 	ret0, _ := ret[0].(Client)
