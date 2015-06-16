@@ -4,8 +4,8 @@
 package mock_firebase
 
 import (
-	gomock "code.google.com/p/gomock/gomock"
 	. "github.com/JustinTulloss/firebase"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // Mock of Api interface
