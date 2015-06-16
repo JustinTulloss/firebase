@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"code.google.com/p/gomock/gomock"
-
 	"github.com/JustinTulloss/firebase"
 	"github.com/JustinTulloss/firebase/mock_firebase"
+	"github.com/golang/mock/gomock"
 )
 
 type Name struct {
