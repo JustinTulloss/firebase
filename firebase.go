@@ -4,7 +4,9 @@ package firebase
 
 import (
 	"bytes"
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -46,6 +48,23 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 	*t = Timestamp(time.Unix(seconds, nanoseconds))
 
 	return nil
+}
+
+func (t *Timestamp) Scan(src interface{}) error {
+	fmt.Printf("is this even happening?\n")
+	ts, ok := src.(time.Time)
+	if !ok {
+		return errors.New("Did not receive a time.Time type as src")
+	}
+	*t = Timestamp(ts)
+	return nil
+}
+
+func (t *Timestamp) Value() (driver.Value, error) {
+	if t == nil {
+		return driver.Value(nil), nil
+	}
+	return driver.Value(time.Time(*t)), nil
 }
 
 func (t Timestamp) String() string {
