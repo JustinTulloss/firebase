@@ -328,12 +328,19 @@ func (c *client) Iterator(d Destination) <-chan *KeyedValue {
 }
 
 func (c *client) Shallow() ([]string, error) {
-	c.params = c.newParamMap("shallow", "true")
-	ch := c.Iterator(nil)
-	keySlice := []string{}
-	for kv := range ch {
-		keySlice = append(keySlice, kv.Key)
+	results := make(map[string]bool)
+
+	err := c.clientWithNewParam("shallow", true).Value(&results)
+	if err != nil {
+		return nil, err
 	}
+
+	keySlice := make([]string, 0, len(results))
+
+	for k, _ := range results {
+		keySlice = append(keySlice, k)
+	}
+
 	return keySlice, nil
 }
 
