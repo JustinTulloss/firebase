@@ -76,7 +76,8 @@ type ServerValue struct {
 }
 
 type FirebaseError struct {
-	Message string `json:"error"`
+	Message    string `json:"error"`
+	StatusCode int
 }
 
 func (f *FirebaseError) Error() string {
@@ -508,6 +509,7 @@ func (f *f) Call(method, path, auth string, body interface{}, params map[string]
 	if res.StatusCode >= 400 {
 		err := &FirebaseError{}
 		decoder.Decode(err)
+		err.StatusCode = res.StatusCode
 		return err
 	}
 
