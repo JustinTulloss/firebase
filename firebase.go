@@ -202,6 +202,7 @@ type Client interface {
 
 	// Query functions. They map directly to the Firebase operations.
 	// https://www.firebase.com/docs/rest/guide/retrieving-data.html#section-rest-queries
+	Auth(auth string) Client
 	OrderBy(prop string) Client
 	EqualTo(value string) Client
 	StartAt(value string) Client
@@ -381,6 +382,12 @@ func (c *client) clientWithNewParam(key string, value interface{}) *client {
 
 // Query functions. They map directly to the Firebase operations.
 // https://www.firebase.com/docs/rest/guide/retrieving-data.html#section-rest-queries
+func (c *client) Auth(auth string) Client {
+	newC := c.clientWithNewParam("auth", auth)
+	newC.auth = ""
+	return newC
+}
+
 func (c *client) OrderBy(prop string) Client {
 	newC := c.clientWithNewParam("orderBy", prop)
 	newC.Order = prop
