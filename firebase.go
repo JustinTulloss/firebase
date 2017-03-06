@@ -360,12 +360,17 @@ const (
 	KeyProp = "$key"
 )
 
-// These are some shenanigans, golang. Shenanigans I say.
-func (c *client) newParamMap(key string, value interface{}) map[string]string {
-	ret := make(map[string]string, len(c.params)+1)
+func (c *client) copyParamMap() map[string]string {
+	ret := make(map[string]string, len(c.params))
 	for key, value := range c.params {
 		ret[key] = value
 	}
+	return ret
+}
+
+// These are some shenanigans, golang. Shenanigans I say.
+func (c *client) newParamMap(key string, value interface{}) map[string]string {
+	ret := c.copyParamMap()
 	jsonVal, _ := json.Marshal(value)
 	ret[key] = string(jsonVal)
 	return ret
@@ -383,9 +388,12 @@ func (c *client) clientWithNewParam(key string, value interface{}) *client {
 // Query functions. They map directly to the Firebase operations.
 // https://www.firebase.com/docs/rest/guide/retrieving-data.html#section-rest-queries
 func (c *client) Auth(auth string) Client {
-	newC := c.clientWithNewParam("auth", auth)
-	newC.auth = ""
-	return newC
+	return &client{
+		api:    c.api,
+		auth:   auth,
+		url:    c.url,
+		params: c.copyParamMap(),
+	}
 }
 
 func (c *client) OrderBy(prop string) Client {
