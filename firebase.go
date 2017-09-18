@@ -76,7 +76,8 @@ type ServerValue struct {
 }
 
 type FirebaseError struct {
-	Message string `json:"error"`
+	Message    string `json:"error"`
+	StatusCode int
 }
 
 func (f *FirebaseError) Error() string {
@@ -201,6 +202,7 @@ type Client interface {
 
 	// Query functions. They map directly to the Firebase operations.
 	// https://www.firebase.com/docs/rest/guide/retrieving-data.html#section-rest-queries
+	Auth(auth string) Client
 	OrderBy(prop string) Client
 	EqualTo(value string) Client
 	StartAt(value string) Client
@@ -261,7 +263,7 @@ type f struct{}
 
 var (
 	connectTimeout   = time.Duration(30 * time.Second) // timeout for http connection
-	readWriteTimeout = time.Duration(10 * time.Second) // timeout for http read/write
+	readWriteTimeout = time.Duration(60 * time.Second) // timeout for http read/write
 )
 
 // httpClient is the HTTP client used to make calls to Firebase with the default API
@@ -328,12 +330,19 @@ func (c *client) Iterator(d Destination) <-chan *KeyedValue {
 }
 
 func (c *client) Shallow() ([]string, error) {
-	c.params = c.newParamMap("shallow", "true")
-	ch := c.Iterator(nil)
-	keySlice := []string{}
-	for kv := range ch {
-		keySlice = append(keySlice, kv.Key)
+	results := make(map[string]bool)
+
+	err := c.clientWithNewParam("shallow", true).Value(&results)
+	if err != nil {
+		return nil, err
 	}
+
+	keySlice := make([]string, 0, len(results))
+
+	for k, _ := range results {
+		keySlice = append(keySlice, k)
+	}
+
 	return keySlice, nil
 }
 
@@ -351,12 +360,17 @@ const (
 	KeyProp = "$key"
 )
 
-// These are some shenanigans, golang. Shenanigans I say.
-func (c *client) newParamMap(key string, value interface{}) map[string]string {
-	ret := make(map[string]string, len(c.params)+1)
+func (c *client) copyParamMap() map[string]string {
+	ret := make(map[string]string, len(c.params))
 	for key, value := range c.params {
 		ret[key] = value
 	}
+	return ret
+}
+
+// These are some shenanigans, golang. Shenanigans I say.
+func (c *client) newParamMap(key string, value interface{}) map[string]string {
+	ret := c.copyParamMap()
 	jsonVal, _ := json.Marshal(value)
 	ret[key] = string(jsonVal)
 	return ret
@@ -373,6 +387,15 @@ func (c *client) clientWithNewParam(key string, value interface{}) *client {
 
 // Query functions. They map directly to the Firebase operations.
 // https://www.firebase.com/docs/rest/guide/retrieving-data.html#section-rest-queries
+func (c *client) Auth(auth string) Client {
+	return &client{
+		api:    c.api,
+		auth:   auth,
+		url:    c.url,
+		params: c.copyParamMap(),
+	}
+}
+
 func (c *client) OrderBy(prop string) Client {
 	newC := c.clientWithNewParam("orderBy", prop)
 	newC.Order = prop
@@ -501,6 +524,7 @@ func (f *f) Call(method, path, auth string, body interface{}, params map[string]
 	if res.StatusCode >= 400 {
 		err := &FirebaseError{}
 		decoder.Decode(err)
+		err.StatusCode = res.StatusCode
 		return err
 	}
 
