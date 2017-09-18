@@ -263,7 +263,7 @@ type f struct{}
 
 var (
 	connectTimeout   = time.Duration(30 * time.Second) // timeout for http connection
-	readWriteTimeout = time.Duration(10 * time.Second) // timeout for http read/write
+	readWriteTimeout = time.Duration(60 * time.Second) // timeout for http read/write
 )
 
 // httpClient is the HTTP client used to make calls to Firebase with the default API
